@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.text import slugify
 from users.models import CustomUser
 
 class Animal(models.Model):
@@ -7,26 +8,37 @@ class Animal(models.Model):
         ('adopted', 'Усыновлено')
     ]
 
-    name = models.CharField(max_length=100)
-    species = models.CharField(max_length=50)  # кошка, собака и т.д.
-    breed = models.CharField(max_length=100, blank=True, null=True)  # порода, необязательное поле
-    age_years = models.PositiveIntegerField(default=0)  # годы
-    age_months = models.PositiveIntegerField(default=0)  # месяцы
-    health_status = models.TextField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_shelter')
-    created_at = models.DateTimeField(auto_now_add=True)
+    name = models.CharField("Имя", max_length=100)
+    species = models.CharField("Вид", max_length=50)
+    breed = models.CharField("Порода", max_length=100, blank=True, null=True)
+    age_years = models.PositiveIntegerField("Возраст (годы)", default=0)
+    age_months = models.PositiveIntegerField("Возраст (месяцы)", default=0)
+    health_status = models.TextField("Состояние здоровья")
+    description = models.TextField("Описание/характер", blank=True, null=True)
+    status = models.CharField("Статус", max_length=20, choices=STATUS_CHOICES, default='in_shelter')
+    created_at = models.DateTimeField("Дата добавления", auto_now_add=True)
+    slug = models.SlugField("Ссылка (slug)", max_length=120, unique=True, blank=True)
+
+    class Meta:
+        verbose_name = "Животное"
+        verbose_name_plural = "Животные"
+        ordering = ['name']
 
     def __str__(self):
         return f"{self.name} ({self.species})"
 
-    def full_age(self):
-        """Возвращает возраст в формате '1 год 6 месяцев'"""
-        parts = []
-        if self.age_years:
-            parts.append(f"{self.age_years} год{'а' if self.age_years == 1 else 'ов'}")
-        if self.age_months:
-            parts.append(f"{self.age_months} мес.")
-        return ' '.join(parts) or "Возраст не указан"
+    def save(self, *args, **kwargs):
+        # Автоматически создаём slug из имени, если не указан
+        if not self.slug:
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
+            while Animal.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
 
 
 class AnimalPhoto(models.Model):
