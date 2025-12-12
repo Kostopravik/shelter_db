@@ -1,0 +1,280 @@
+{% extends 'animals/base.html' %}
+
+{% block title %}Животные - PawShelter{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        text-align: center;
+        color: white;
+        margin-bottom: 3rem;
+        padding: 2rem 0;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .filter-section {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+    
+    .filter-form {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .filter-form input {
+        padding: 0.6rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .filter-form input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .animals-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+    }
+    
+    .animal-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        transition: transform 0.3s, box-shadow 0.3s;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    
+    .animal-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    .animal-card-image-container {
+        width: 100%;
+        height: 200px;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .animal-card-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: opacity 0.5s;
+    }
+    
+    .animal-card-image-slider {
+        position: relative;
+        width: 100%;
+        height: 200px;
+    }
+    
+    .animal-card-image-slider img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        position: absolute;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        transition: opacity 0.5s;
+    }
+    
+    .animal-card-image-slider img.active {
+        opacity: 1;
+    }
+    
+    .animal-card-image-slider-dots {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 5px;
+        z-index: 10;
+    }
+    
+    .animal-card-image-slider-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .animal-card-image-slider-dot.active {
+        background: white;
+    }
+    
+    .animal-card-info {
+        padding: 1.5rem;
+    }
+    
+    .animal-card-name {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .animal-card-species {
+        color: #666;
+        margin-bottom: 0.5rem;
+    }
+    
+    .animal-card-age {
+        color: #999;
+        font-size: 0.9rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        color: #999;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Автоматическая смена фотографий в слайдере
+    document.addEventListener('DOMContentLoaded', function() {
+        const sliders = document.querySelectorAll('.animal-card-image-slider');
+        
+        sliders.forEach(slider => {
+            const images = slider.querySelectorAll('img');
+            const dots = slider.querySelectorAll('.animal-card-image-slider-dot');
+            let currentIndex = 0;
+            
+            function showImage(index) {
+                images.forEach((img, i) => {
+                    img.classList.toggle('active', i === index);
+                });
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+            }
+            
+            // Автоматическая смена каждые 3 секунды
+            setInterval(() => {
+                currentIndex = (currentIndex + 1) % images.length;
+                showImage(currentIndex);
+            }, 3000);
+            
+            // Клик по точкам
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    currentIndex = index;
+                    showImage(currentIndex);
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>🐾 Наши питомцы</h1>
+    <p style="font-size: 1.2rem; opacity: 0.9;">Найдите своего нового друга</p>
+</div>
+
+<div class="filter-section">
+    <form method="get" class="filter-form">
+        <input type="text" name="species" placeholder="Поиск по виду (например: кошка, собака)" value="{{ selected_species }}">
+        <select name="status" style="padding: 0.6rem 1rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; min-width: 180px;">
+            <option value="">Все статусы</option>
+            {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary">Найти</button>
+        {% if selected_species or selected_status %}
+            <a href="{% url 'animal_list' %}" class="btn btn-secondary">Сбросить</a>
+        {% endif %}
+    </form>
+</div>
+
+{% if animals %}
+    <div class="animals-grid">
+        {% for animal in animals %}
+            <a href="{% url 'animal_detail' animal.slug %}" class="animal-card">
+                <div class="animal-card-image-container">
+                    {% if animal.photos_list %}
+                        {% if animal.photos_list|length > 1 %}
+                            <div class="animal-card-image-slider" data-animal-id="{{ animal.id }}">
+                                {% for photo in animal.photos_list %}
+                                    <img src="{{ photo.photo_url.url }}" alt="{{ animal.name }}" 
+                                         class="{% if forloop.first %}active{% endif %}" 
+                                         data-index="{{ forloop.counter0 }}">
+                                {% endfor %}
+                                <div class="animal-card-image-slider-dots">
+                                    {% for photo in animal.photos_list %}
+                                        <span class="animal-card-image-slider-dot {% if forloop.first %}active{% endif %}" 
+                                              data-index="{{ forloop.counter0 }}"></span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <img src="{{ animal.photos_list.0.photo_url.url }}" alt="{{ animal.name }}" class="animal-card-image">
+                        {% endif %}
+                    {% else %}
+                        <div class="animal-card-image"></div>
+                    {% endif %}
+                </div>
+                <div class="animal-card-info">
+                    <div class="animal-card-name">{{ animal.name }}</div>
+                    <div class="animal-card-species">{{ animal.species }}</div>
+                    {% if animal.breed %}
+                        <div class="animal-card-species">{{ animal.breed }}</div>
+                    {% endif %}
+                    <div class="animal-card-age">
+                        {% if animal.age_years > 0 %}
+                            {{ animal.age_years }} г.
+                        {% endif %}
+                        {% if animal.age_months > 0 %}
+                            {{ animal.age_months }} мес.
+                        {% endif %}
+                    </div>
+                    <div style="margin-top: 0.5rem;">
+                        <span style="padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold; 
+                            {% if animal.status == 'in_shelter' %}background: #d4edda; color: #155724;{% else %}background: #fff3cd; color: #856404;{% endif %}">
+                            {% if animal.status == 'in_shelter' %}✅ В приюте{% else %}🏠 Усыновлено{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <p>Животные не найдены</p>
+    </div>
+{% endif %}
+{% endblock %}
+

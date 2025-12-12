@@ -1,0 +1,226 @@
+{% extends 'animals/base.html' %}
+
+{% block title %}Заявки на усыновление - PawShelter{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        text-align: center;
+        color: white;
+        margin-bottom: 3rem;
+        padding: 2rem 0;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .filter-section {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+    
+    .filter-form {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .filter-form select {
+        padding: 0.6rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+    
+    .adoptions-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .adoption-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        transition: transform 0.3s;
+        color: inherit;
+        display: block;
+    }
+    
+    .adoption-card:hover {
+        transform: translateY(-3px);
+    }
+    
+    .adoption-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .adoption-title {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .status-badge {
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+    
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-approved {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-returned {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .adoption-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .info-item {
+        color: #666;
+    }
+    
+    .info-label {
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        color: #999;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📋 {% if is_admin_or_volunteer %}Заявки на усыновление{% else %}Мои заявки{% endif %}</h1>
+</div>
+
+<div class="filter-section">
+    <form method="get" class="filter-form">
+        <label for="status">Фильтр по статусу:</label>
+        <select id="status" name="status">
+            <option value="">Все заявки</option>
+            <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>В ожидании</option>
+            <option value="approved" {% if selected_status == 'approved' %}selected{% endif %}>Одобрено</option>
+            <option value="rejected" {% if selected_status == 'rejected' %}selected{% endif %}>Отклонено</option>
+            <option value="returned" {% if selected_status == 'returned' %}selected{% endif %}>Возвращено</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Применить</button>
+        {% if selected_status %}
+            <a href="{% url 'adoption_list' %}" class="btn btn-secondary">Сбросить</a>
+        {% endif %}
+    </form>
+</div>
+
+{% if adoptions %}
+    <div class="adoptions-list">
+        {% for adoption in adoptions %}
+            <div class="adoption-card">
+                <div class="adoption-header">
+                    <div class="adoption-title" style="flex: 1;">
+                        {% if is_admin_or_volunteer %}
+                            {{ adoption.user.username }} → {{ adoption.animal.name }}
+                        {% else %}
+                            {{ adoption.animal.name }}
+                        {% endif %}
+                    </div>
+                    <span class="status-badge status-{{ adoption.status }}">
+                        {{ adoption.get_status_display }}
+                    </span>
+                </div>
+                <div class="adoption-info">
+                    {% if is_admin_or_volunteer %}
+                        <div class="info-item">
+                            <span class="info-label">Пользователь:</span> {{ adoption.user.username }}
+                        </div>
+                        {% if adoption.user.role == 'adopter' %}
+                            <div class="info-item" style="background: #f8f9fa; padding: 0.8rem; border-radius: 8px; margin-top: 0.5rem;">
+                                <span class="info-label">Анкета усыновителя:</span>
+                                <div style="margin-top: 0.5rem; font-size: 0.9rem;">
+                                    <div>Опыт содержания: {% if adoption.user.has_experience %}✅ Да{% else %}❌ Нет{% endif %}</div>
+                                    <div>Другие питомцы: {% if adoption.user.has_other_pets %}✅ Да{% else %}❌ Нет{% endif %}</div>
+                                    {% if adoption.user.ready_for_pet %}
+                                        <div>Готовность к питомцу: {{ adoption.user.ready_for_pet }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                    <div class="info-item">
+                        <span class="info-label">Животное:</span> {{ adoption.animal.species }} ({{ adoption.animal.name }})
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Подано:</span> {{ adoption.submitted_at|date:"d.m.Y H:i" }}
+                    </div>
+                    {% if adoption.status == 'rejected' and adoption.rejection_reason %}
+                        <div class="info-item" style="color: #721c24;">
+                            <span class="info-label">Причина отклонения:</span> {{ adoption.rejection_reason|truncatewords:15 }}
+                        </div>
+                    {% elif adoption.status == 'approved' and not is_admin_or_volunteer %}
+                        <div class="info-item" style="color: #155724;">
+                            <span class="info-label">✅ Заявка одобрена!</span> Животное {{ adoption.animal.name }} теперь ваше. Свяжитесь с нами по номеру <strong>+7 000 0000 0000</strong> для дальнейших действий.
+                        </div>
+                    {% endif %}
+                </div>
+                {% if is_admin %}
+                    <div class="admin-actions" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
+                        <form method="post" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                            {% csrf_token %}
+                            <input type="hidden" name="adoption_id" value="{{ adoption.id }}">
+                            <select name="new_status" style="padding: 0.4rem; border: 1px solid #e0e0e0; border-radius: 5px;">
+                                <option value="pending" {% if adoption.status == 'pending' %}selected{% endif %}>В ожидании</option>
+                                <option value="approved" {% if adoption.status == 'approved' %}selected{% endif %}>Одобрено</option>
+                                <option value="rejected" {% if adoption.status == 'rejected' %}selected{% endif %}>Отклонено</option>
+                            </select>
+                            <input type="text" name="rejection_reason" placeholder="Причина (если отклоняете)" style="flex: 1; min-width: 200px; padding: 0.4rem; border: 1px solid #e0e0e0; border-radius: 5px;">
+                            <button type="submit" class="btn btn-primary" style="padding: 0.4rem 1rem;">Изменить статус</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <p>Заявки не найдены</p>
+    </div>
+{% endif %}
+{% endblock %}
+

@@ -1,0 +1,75 @@
+{% extends 'animals/base.html' %}
+
+{% block title %}Удаление животного - PawShelter{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+    }
+    
+    .delete-title {
+        color: #ff6b6b;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .delete-warning {
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1.5rem 0;
+        color: #856404;
+    }
+    
+    .animal-preview {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        text-align: left;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-container">
+    <h1 class="delete-title">⚠️ Удаление животного</h1>
+    
+    <div class="delete-warning">
+        <strong>Внимание!</strong> Это действие нельзя отменить. Животное и все связанные данные (фотографии, заявки) будут удалены навсегда.
+    </div>
+    
+    <div class="animal-preview">
+        <h3>{{ animal.name }}</h3>
+        <p><strong>Вид:</strong> {{ animal.species }}</p>
+        {% if animal.breed %}
+            <p><strong>Порода:</strong> {{ animal.breed }}</p>
+        {% endif %}
+        <p><strong>Статус:</strong> {{ animal.get_status_display }}</p>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">Да, удалить</button>
+            <a href="{% url 'animal_detail' animal.slug %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

@@ -18,6 +18,10 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 AUTH_USER_MODEL = 'users.CustomUser' #Чтобы наш user использовал
 
+LOGIN_REDIRECT_URL = "home"
+LOGOUT_REDIRECT_URL = "home"
+LOGIN_URL = "login"
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -44,6 +48,8 @@ INSTALLED_APPS = [
     'animals',
     'adoptions',
     'activities',
+
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -122,7 +128,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+##############################################
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Media files
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+##############################################
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

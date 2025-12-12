@@ -1,0 +1,135 @@
+{% extends 'animals/base.html' %}
+
+{% block title %}Лента новостей - PawShelter{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        text-align: center;
+        color: white;
+        margin-bottom: 3rem;
+        padding: 2rem 0;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .activities-section {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+    
+    .activities-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .activity-item {
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .activity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .activity-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .activity-type {
+        background: #667eea;
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.85rem;
+    }
+    
+    .activity-description {
+        color: #666;
+        margin: 0.5rem 0;
+        line-height: 1.6;
+    }
+    
+    .activity-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        color: #999;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .activity-photo {
+        max-width: 100%;
+        border-radius: 8px;
+        margin-top: 1rem;
+        max-height: 300px;
+        object-fit: cover;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #999;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📰 Лента новостей приюта</h1>
+</div>
+
+<div class="activities-section">
+    {% if activities %}
+        <div class="activities-list">
+            {% for activity in activities %}
+                <div class="activity-item">
+                    <div class="activity-header">
+                        <div class="activity-title">{{ activity.title }}</div>
+                        <span class="activity-type">{{ activity.get_activity_type_display }}</span>
+                    </div>
+                    <div class="activity-description">{{ activity.description }}</div>
+                    {% if activity.photo_url %}
+                        <img src="{{ activity.photo_url.url }}" alt="{{ activity.title }}" class="activity-photo">
+                    {% endif %}
+                    <div class="activity-meta">
+                        <span>Создано: {{ activity.created_by.username }}</span>
+                        <span>{{ activity.created_at|date:"d.m.Y H:i" }}</span>
+                        {% if user.is_authenticated %}
+                            {% if user.role == 'admin' or user.role == 'volunteer' %}
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <a href="{% url 'edit_activity' activity.id %}" class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">✏️ Редактировать</a>
+                                    <a href="{% url 'delete_activity' activity.id %}" class="btn btn-danger" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;" onclick="return confirm('Вы уверены, что хотите удалить эту активность?')">🗑️ Удалить</a>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>Пока нет ни одной активности.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

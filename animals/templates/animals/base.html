@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PawShelter - Приют для животных {% endblock %}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar h1 {
+            color: #667eea;
+            font-size: 1.5rem;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.6rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-active {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-active:hover {
+            background: #f8f9ff;
+        }
+        
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #ff5252;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .user-info {
+            color: #667eea;
+            margin-right: 1rem;
+        }
+        
+        .messages {
+            margin: 1rem 0;
+        }
+        
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <h1>🐾 PawShelter</h1>
+        <div class="nav-buttons">
+            {% if user.is_authenticated %}
+                {% with current_url=request.resolver_match.url_name %}
+                <span class="user-info">Привет, {{ user.username }}! ({{ user.get_role_display }})</span>
+                <a href="{% url 'home' %}" class="btn {% if current_url == 'home' %}btn-active{% else %}btn-primary{% endif %}">Главная</a>
+                <a href="{% url 'animal_list' %}" class="btn {% if current_url == 'animal_list' or current_url == 'animal_detail' or current_url == 'edit_animal' %}btn-active{% else %}btn-primary{% endif %}">Животные</a>
+                <a href="{% url 'adoption_list' %}" class="btn {% if current_url == 'adoption_list' or current_url == 'adoption_detail' %}btn-active{% else %}btn-primary{% endif %}">
+                    {% if user.role == 'admin' or user.role == 'volunteer' %}Просмотр заявок{% else %}Мои заявки{% endif %}
+                </a>
+                <a href="{% url 'return_list' %}" class="btn {% if current_url == 'return_list' %}btn-active{% else %}btn-primary{% endif %}">
+                    {% if user.role == 'admin' or user.role == 'volunteer' %}Возвраты{% else %}Мои возвраты{% endif %}
+                </a>
+                {% if user.role == 'admin' or user.role == 'volunteer' %}
+                    <a href="{% url 'create_activity' %}" class="btn {% if current_url == 'create_activity' or current_url == 'edit_activity' %}btn-active{% else %}btn-primary{% endif %}">Добавить новость</a>
+                    <a href="{% url 'create_animal' %}" class="btn {% if current_url == 'create_animal' or current_url == 'edit_animal' %}btn-active{% else %}btn-primary{% endif %}">Добавить животное</a>
+                {% endif %}
+                {% if user.role == 'admin' %}
+                    <a href="/admin/" class="btn btn-primary" target="_blank">Админ-панель</a>
+                {% endif %}
+                <a href="{% url 'logout' %}" class="btn btn-danger">Выйти</a>
+                {% endwith %}
+            {% else %}
+                {% with current_url=request.resolver_match.url_name %}
+                <a href="{% url 'home' %}" class="btn {% if current_url == 'home' %}btn-active{% else %}btn-primary{% endif %}">Главная</a>
+                <a href="{% url 'animal_list' %}" class="btn {% if current_url == 'animal_list' or current_url == 'animal_detail' %}btn-active{% else %}btn-primary{% endif %}">Животные</a>
+                <a href="{% url 'login' %}" class="btn {% if current_url == 'login' %}btn-active{% else %}btn-primary{% endif %}">Войти</a>
+                <a href="{% url 'register' %}" class="btn {% if current_url == 'register' %}btn-active{% else %}btn-primary{% endif %}">Регистрация</a>
+                {% endwith %}
+            {% endif %}
+        </div>
+    </nav>
+    
+    <div class="container">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

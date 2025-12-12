@@ -1,0 +1,198 @@
+{% extends 'animals/base.html' %}
+
+{% block title %}Редактировать животное - PawShelter{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-title {
+        color: #667eea;
+        font-size: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 0.8rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: inherit;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-group textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .required {
+        color: #ff6b6b;
+    }
+    
+    .photos-section {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #e0e0e0;
+    }
+    
+    .existing-photos {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .photo-item {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .photo-item img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+    
+    .photo-delete {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: rgba(255, 0, 0, 0.8);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        font-size: 1.2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1 class="form-title">✏️ Редактировать животное: {{ animal.name }}</h1>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="name">Имя <span class="required">*</span></label>
+            <input type="text" id="name" name="name" value="{{ animal.name }}" required>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="species">Вид <span class="required">*</span></label>
+                <input type="text" id="species" name="species" value="{{ animal.species }}" required placeholder="например: кошка, собака">
+            </div>
+            
+            <div class="form-group">
+                <label for="breed">Порода</label>
+                <input type="text" id="breed" name="breed" value="{{ animal.breed|default:'' }}" placeholder="опционально">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="age_years">Возраст (годы)</label>
+                <input type="number" id="age_years" name="age_years" min="0" value="{{ animal.age_years }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="age_months">Возраст (месяцы)</label>
+                <input type="number" id="age_months" name="age_months" min="0" value="{{ animal.age_months }}">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="health_status">Состояние здоровья <span class="required">*</span></label>
+            <textarea id="health_status" name="health_status" required>{{ animal.health_status }}</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Описание/характер</label>
+            <textarea id="description" name="description">{{ animal.description|default:'' }}</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="status">Статус</label>
+            <select id="status" name="status">
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if value == animal.status %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="photos-section">
+            <h3>Существующие фотографии</h3>
+            {% if photos %}
+                <div class="existing-photos">
+                    {% for photo in photos %}
+                        <div class="photo-item">
+                            <img src="{{ photo.photo_url.url }}" alt="Фото {{ animal.name }}">
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: #999;">Нет загруженных фотографий</p>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="photos">Добавить новые фотографии (можно выбрать несколько)</label>
+            <input type="file" id="photos" name="photos" accept="image/*" multiple>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            <a href="{% url 'animal_detail' animal.slug %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

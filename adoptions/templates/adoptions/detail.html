@@ -1,0 +1,272 @@
+{% extends 'animals/base.html' %}
+
+{% block title %}Заявка на усыновление - PawShelter{% endblock %}
+
+{% block extra_css %}
+<style>
+    .adoption-detail {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        margin-bottom: 2rem;
+    }
+    
+    .adoption-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .adoption-title {
+        font-size: 2rem;
+        color: #667eea;
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1.5rem;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: bold;
+    }
+    
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-approved {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-returned {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .adoption-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-block {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .info-label {
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .info-value {
+        color: #333;
+    }
+    
+    .actions-section {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+    
+    .action-form {
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .form-group textarea {
+        width: 100%;
+        padding: 0.8rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: inherit;
+        min-height: 100px;
+        resize: vertical;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .back-link {
+        display: inline-block;
+        margin-bottom: 1rem;
+        color: white;
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        transition: background 0.3s;
+    }
+    
+    .back-link:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'adoption_list' %}" class="back-link">← Назад к списку заявок</a>
+
+<div class="adoption-detail">
+    <div class="adoption-header">
+        <h1 class="adoption-title">Заявка на усыновление</h1>
+        <span class="status-badge status-{{ adoption.status }}">
+            {{ adoption.get_status_display }}
+        </span>
+    </div>
+    
+    <div class="adoption-info">
+        <div class="info-block">
+            <div class="info-label">Пользователь</div>
+            <div class="info-value">
+                <strong>{{ adoption.user.username }}</strong><br>
+                <small>{{ adoption.user.email }}</small>
+            </div>
+        </div>
+        
+        {% if adoption.user.role == 'adopter' %}
+            <div class="info-block">
+                <div class="info-label">Анкета усыновителя</div>
+                <div class="info-value">
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>Опыт содержания:</strong> 
+                        {% if adoption.user.has_experience %}✅ Да{% else %}❌ Нет{% endif %}
+                    </div>
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>Другие питомцы:</strong> 
+                        {% if adoption.user.has_other_pets %}✅ Да{% else %}❌ Нет{% endif %}
+                    </div>
+                    {% if adoption.user.ready_for_pet %}
+                        <div>
+                            <strong>Готовность к питомцу:</strong><br>
+                            {{ adoption.user.ready_for_pet }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <div class="info-block">
+            <div class="info-label">Животное</div>
+            <div class="info-value">
+                <a href="{% url 'animal_detail' adoption.animal.slug %}" style="color: #667eea;">
+                    {{ adoption.animal.name }} ({{ adoption.animal.species }})
+                </a>
+            </div>
+        </div>
+        
+        <div class="info-block">
+            <div class="info-label">Дата подачи</div>
+            <div class="info-value">{{ adoption.submitted_at|date:"d.m.Y H:i" }}</div>
+        </div>
+        
+        {% if adoption.rejection_reason %}
+            <div class="info-block">
+                <div class="info-label">Причина отклонения</div>
+                <div class="info-value">{{ adoption.rejection_reason }}</div>
+            </div>
+        {% endif %}
+        
+        {% if has_return %}
+            <div class="info-block">
+                <div class="info-label">Возврат</div>
+                <div class="info-value">
+                    <strong>Дата:</strong> {{ adoption.return_record.returned_at|date:"d.m.Y H:i" }}<br>
+                    <strong>Причина:</strong> {{ adoption.return_record.reason }}
+                </div>
+            </div>
+        {% endif %}
+        
+        {% if adoption.status == 'approved' and user.role == 'adopter' and adoption.user == user %}
+            <div class="info-block" style="background: #d4edda; border-left: 4px solid #28a745; padding: 1.5rem;">
+                <div class="info-label" style="color: #155724; font-size: 1.2rem;">✅ Заявка одобрена!</div>
+                <div class="info-value" style="color: #155724; margin-top: 1rem;">
+                    <p style="font-size: 1.1rem; margin-bottom: 1rem;">
+                        Поздравляем! Животное <strong>{{ adoption.animal.name }}</strong> теперь ваше.
+                    </p>
+                    <p style="font-size: 1rem;">
+                        Для дальнейших действий свяжитесь с нами по номеру телефона:<br>
+                        <strong style="font-size: 1.2rem; color: #667eea;">+7 000 0000 0000</strong>
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if user.role == 'admin' %}
+    <div class="actions-section">
+        <h2 style="color: #667eea; margin-bottom: 1rem;">Действия с заявкой</h2>
+        
+        {% if adoption.status == 'pending' %}
+            <form method="post" class="action-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="approve">
+                <p style="color: #856404; margin-bottom: 1rem;">
+                    <strong>⚠️ Внимание:</strong> При одобрении этой заявки все остальные активные заявки на это животное будут автоматически отклонены.
+                </p>
+                <button type="submit" class="btn btn-primary">✅ Одобрить заявку</button>
+            </form>
+            
+            <form method="post" class="action-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reject">
+                <div class="form-group">
+                    <label for="rejection_reason">Причина отклонения <span style="color: #ff6b6b;">*</span></label>
+                    <textarea id="rejection_reason" name="rejection_reason" required placeholder="Укажите причину отклонения заявки..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-danger">❌ Отклонить заявку</button>
+                </div>
+            </form>
+        {% endif %}
+        
+        {% if adoption.status == 'approved' and not has_return %}
+            <form method="post" class="action-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="return">
+                <div class="form-group">
+                    <label for="reason">Причина возврата <span style="color: #ff6b6b;">*</span></label>
+                    <textarea id="reason" name="reason" required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-danger">🔄 Оформить возврат</button>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}
+

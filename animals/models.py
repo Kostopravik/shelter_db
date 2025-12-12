@@ -31,9 +31,13 @@ class Animal(models.Model):
         # Автоматически создаём slug из имени, если не указан
         if not self.slug:
             base_slug = slugify(self.name)
+            # Если slugify вернул пустую строку, используем хэш имени
+            if not base_slug:
+                base_slug = f"animal-{abs(hash(self.name)) % 10000}"
             slug = base_slug
             counter = 1
-            while Animal.objects.filter(slug=slug).exists():
+            # Проверяем уникальность slug, исключая текущий объект (если он уже существует)
+            while Animal.objects.filter(slug=slug).exclude(pk=self.pk if self.pk else None).exists():
                 slug = f"{base_slug}-{counter}"
                 counter += 1
             self.slug = slug

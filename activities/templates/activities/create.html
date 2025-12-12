@@ -1,0 +1,109 @@
+{% extends 'animals/base.html' %}
+
+{% block title %}Добавить новость - PawShelter{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-title {
+        color: #667eea;
+        font-size: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .form-group input[type="text"],
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 0.8rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: inherit;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-group textarea {
+        min-height: 150px;
+        resize: vertical;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .required {
+        color: #ff6b6b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1 class="form-title">📰 Добавить новость</h1>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="title">Название <span class="required">*</span></label>
+            <input type="text" id="title" name="title" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="activity_type">Тип активности <span class="required">*</span></label>
+            <select id="activity_type" name="activity_type" required>
+                <option value="">Выберите тип</option>
+                {% for value, label in activity_types %}
+                    <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Описание <span class="required">*</span></label>
+            <textarea id="description" name="description" required></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="photo_url">Фото (опционально)</label>
+            <input type="file" id="photo_url" name="photo_url" accept="image/*">
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Создать новость</button>
+            <a href="{% url 'home' %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

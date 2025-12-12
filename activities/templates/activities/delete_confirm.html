@@ -1,0 +1,72 @@
+{% extends 'animals/base.html' %}
+
+{% block title %}Удаление активности - PawShelter{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+    }
+    
+    .delete-title {
+        color: #ff6b6b;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .delete-warning {
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1.5rem 0;
+        color: #856404;
+    }
+    
+    .activity-preview {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        text-align: left;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-container">
+    <h1 class="delete-title">⚠️ Удаление активности</h1>
+    
+    <div class="delete-warning">
+        <strong>Внимание!</strong> Это действие нельзя отменить. Активность будет удалена навсегда.
+    </div>
+    
+    <div class="activity-preview">
+        <h3>{{ activity.title }}</h3>
+        <p><strong>Тип:</strong> {{ activity.get_activity_type_display }}</p>
+        <p>{{ activity.description|truncatewords:20 }}</p>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">Да, удалить</button>
+            <a href="{% url 'home' %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

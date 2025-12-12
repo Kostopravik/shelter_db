@@ -1,0 +1,366 @@
+{% extends 'animals/base.html' %}
+
+{% block title %}Главная - PawShelter{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        text-align: center;
+        padding: 3rem 0;
+        color: white;
+        margin-bottom: 3rem;
+    }
+    
+    .hero-section h2 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .hero-section p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+    
+    .animals-section {
+        margin-bottom: 4rem;
+    }
+    
+    .section-title {
+        color: white;
+        font-size: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .animals-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .animal-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        transition: transform 0.3s, box-shadow 0.3s;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    
+    .animal-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    .animal-card-image-container {
+        width: 100%;
+        height: 200px;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .animal-card-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: opacity 0.5s;
+    }
+    
+    .animal-card-image-slider {
+        position: relative;
+        width: 100%;
+        height: 200px;
+    }
+    
+    .animal-card-image-slider img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        position: absolute;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        transition: opacity 0.5s;
+    }
+    
+    .animal-card-image-slider img.active {
+        opacity: 1;
+    }
+    
+    .animal-card-image-slider-dots {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 5px;
+        z-index: 10;
+    }
+    
+    .animal-card-image-slider-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .animal-card-image-slider-dot.active {
+        background: white;
+    }
+    
+    .animal-card-info {
+        padding: 1.5rem;
+    }
+    
+    .animal-card-name {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .animal-card-species {
+        color: #666;
+        margin-bottom: 0.5rem;
+    }
+    
+    .animal-card-age {
+        color: #999;
+        font-size: 0.9rem;
+    }
+    
+    .view-all-btn {
+        text-align: center;
+    }
+    
+    .activities-section {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+    
+    .activities-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .activity-item {
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .activity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .activity-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .activity-type {
+        background: #667eea;
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.85rem;
+    }
+    
+    .activity-description {
+        color: #666;
+        margin: 0.5rem 0;
+        line-height: 1.6;
+    }
+    
+    .activity-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        color: #999;
+    }
+    
+    .activity-photo {
+        max-width: 100%;
+        border-radius: 8px;
+        margin-top: 1rem;
+        max-height: 300px;
+        object-fit: cover;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #999;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Автоматическая смена фотографий в слайдере
+    document.addEventListener('DOMContentLoaded', function() {
+        const sliders = document.querySelectorAll('.animal-card-image-slider');
+        
+        sliders.forEach(slider => {
+            const images = slider.querySelectorAll('img');
+            const dots = slider.querySelectorAll('.animal-card-image-slider-dot');
+            let currentIndex = 0;
+            
+            function showImage(index) {
+                images.forEach((img, i) => {
+                    img.classList.toggle('active', i === index);
+                });
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+            }
+            
+            // Автоматическая смена каждые 3 секунды
+            setInterval(() => {
+                currentIndex = (currentIndex + 1) % images.length;
+                showImage(currentIndex);
+            }, 3000);
+            
+            // Клик по точкам
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    currentIndex = index;
+                    showImage(currentIndex);
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <h2>Добро пожаловать в PawShelter!</h2>
+    <p>Найдите своего нового друга среди наших питомцев</p>
+</div>
+
+<div class="animals-section">
+    <h2 class="section-title">🐾Наши питомцы</h2>
+    {% if animals %}
+        <div class="animals-grid">
+            {% for animal in animals %}
+                {% if animal.slug %}
+                <a href="{% url 'animal_detail' animal.slug %}" class="animal-card">
+                    <div class="animal-card-image-container">
+                        {% if animal.photos_list %}
+                            {% if animal.photos_list|length > 1 %}
+                                <div class="animal-card-image-slider" data-animal-id="{{ animal.id }}">
+                                    {% for photo in animal.photos_list %}
+                                        <img src="{{ photo.photo_url.url }}" alt="{{ animal.name }}" 
+                                             class="{% if forloop.first %}active{% endif %}" 
+                                             data-index="{{ forloop.counter0 }}">
+                                    {% endfor %}
+                                    <div class="animal-card-image-slider-dots">
+                                        {% for photo in animal.photos_list %}
+                                            <span class="animal-card-image-slider-dot {% if forloop.first %}active{% endif %}" 
+                                                  data-index="{{ forloop.counter0 }}"></span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <img src="{{ animal.photos_list.0.photo_url.url }}" alt="{{ animal.name }}" class="animal-card-image">
+                            {% endif %}
+                        {% else %}
+                            <div class="animal-card-image"></div>
+                        {% endif %}
+                    </div>
+                    <div class="animal-card-info">
+                        <div class="animal-card-name">{{ animal.name }}</div>
+                        <div class="animal-card-species">{{ animal.species }}</div>
+                        {% if animal.breed %}
+                            <div class="animal-card-species">{{ animal.breed }}</div>
+                        {% endif %}
+                        <div class="animal-card-age">
+                            {% if animal.age_years > 0 %}
+                                {{ animal.age_years }} г.
+                            {% endif %}
+                            {% if animal.age_months > 0 %}
+                                {{ animal.age_months }} мес.
+                            {% endif %}
+                        </div>
+                        <div style="margin-top: 0.5rem;">
+                            <span style="padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: bold; 
+                                {% if animal.status == 'in_shelter' %}background: #d4edda; color: #155724;{% else %}background: #fff3cd; color: #856404;{% endif %}">
+                                {% if animal.status == 'in_shelter' %}✅ В приюте{% else %}🏠 Усыновлено{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div class="view-all-btn">
+            <a href="{% url 'animal_list' %}" class="btn btn-primary">Посмотреть всех</a>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>Пока нет животных в приюте</p>
+        </div>
+    {% endif %}
+</div>
+
+<div class="activities-section">
+    <h2 class="section-title" style="color: #333; margin-bottom: 2rem;">📰 Лента новостей</h2>
+    {% if activities %}
+        <div class="activities-list">
+            {% for activity in activities %}
+                <div class="activity-item">
+                    <div class="activity-header">
+                        <div class="activity-title">{{ activity.title }}</div>
+                        <span class="activity-type">{{ activity.get_activity_type_display }}</span>
+                    </div>
+                    <div class="activity-description">{{ activity.description }}</div>
+                    {% if activity.photo_url %}
+                        <img src="{{ activity.photo_url.url }}" alt="{{ activity.title }}" class="activity-photo">
+                    {% endif %}
+                    <div class="activity-meta">
+                        <span>Создано: {{ activity.created_by.username }}</span>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span>{{ activity.created_at|date:"d.m.Y H:i" }}</span>
+                            {% if user.is_authenticated %}
+                                {% if user.role == 'admin' or user.role == 'volunteer' %}
+                                    <a href="{% url 'edit_activity' activity.id %}" class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">✏️ Редактировать</a>
+                                    <a href="{% url 'delete_activity' activity.id %}" class="btn btn-danger" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;" onclick="return confirm('Вы уверены, что хотите удалить эту активность?')">🗑️ Удалить</a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="{% url 'activity_feed' %}" class="btn btn-primary">Все новости</a>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>Пока нет новостей</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
