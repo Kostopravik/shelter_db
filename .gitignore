@@ -11,3 +11,6 @@ __pycache__/
 
 # Logs
 *.log
+
+# Local database
+db.sqlite3

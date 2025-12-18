@@ -120,7 +120,9 @@ def adoption_detail(request, pk):
         elif action == 'return':
             # Оформление возврата
             reason = request.POST.get('reason', '')
-            if not reason:
+            if adoption.user != request.user:
+                messages.error(request, 'Вы можете оформить возврат только для своих заявок')
+            elif not reason:
                 messages.error(request, 'Необходимо указать причину возврата')
             elif adoption.status != 'approved':
                 messages.error(request, 'Возврат можно оформить только для одобренной заявки')
@@ -136,7 +138,10 @@ def adoption_detail(request, pk):
                 adoption.save()
                 adoption.animal.status = 'in_shelter'
                 adoption.animal.save()
-                messages.success(request, 'Возврат успешно оформлен')
+                messages.success(
+                    request,
+                    'Возврат успешно оформлен. Для всех деталей свяжитесь с нами по номеру +7 000 0000 0000'
+                )
         
         return redirect('adoption_detail', pk=pk)
     
@@ -157,17 +162,15 @@ def return_list(request):
     # Администраторы и волонтёры видят все возвраты, остальные - только свои
     if request.user.role in ['admin', 'volunteer']:
         returns = Return.objects.all().order_by('-returned_at')
-        # Для админов и волонтёров показываем одобренные заявки, для которых можно оформить возврат
-        approved_adoptions = Adoption.objects.filter(status='approved').exclude(
-            return_record__isnull=False
-        ).order_by('-submitted_at')
     else:
         returns = Return.objects.filter(adoption__user=request.user).order_by('-returned_at')
-        # Для пользователей показываем их одобренные заявки, для которых можно оформить возврат
-        approved_adoptions = Adoption.objects.filter(
-            user=request.user,
-            status='approved'
-        ).exclude(return_record__isnull=False).order_by('-submitted_at')
+
+    # Для оформления возврата всегда показываем только одобренные заявки текущего пользователя,
+    # чтобы никто не мог оформить возврат по чужой заявке
+    approved_adoptions = Adoption.objects.filter(
+        user=request.user,
+        status='approved'
+    ).exclude(return_record__isnull=False).order_by('-submitted_at')
     
     # Обработка оформления возврата
     if request.method == 'POST':
@@ -179,9 +182,10 @@ def return_list(request):
         else:
             try:
                 adoption = Adoption.objects.get(pk=adoption_id)
-                # Проверка доступа: пользователи могут оформить возврат только для своих заявок
-                if request.user.role not in ['admin', 'volunteer'] and adoption.user != request.user:
-                    messages.error(request, 'У вас нет доступа к этой заявке')
+                # Проверка доступа: возврат можно оформить только по своей заявке,
+                # даже если пользователь администратор или волонтёр
+                if adoption.user != request.user:
+                    messages.error(request, 'Вы можете оформить возврат только для своих заявок')
                 elif adoption.status != 'approved':
                     messages.error(request, 'Возврат можно оформить только для одобренной заявки')
                 elif hasattr(adoption, 'return_record'):
@@ -190,13 +194,17 @@ def return_list(request):
                     Return.objects.create(
                         adoption=adoption,
                         reason=reason,
-                        processed_by=request.user if request.user.role in ['admin', 'volunteer'] else None
+                        # processed_by заполняется сотрудником приюта при необходимости
+                        processed_by=None
                     )
                     adoption.status = 'returned'
                     adoption.save()
                     adoption.animal.status = 'in_shelter'
                     adoption.animal.save()
-                    messages.success(request, 'Возврат успешно оформлен')
+                    messages.success(
+                        request,
+                        'Возврат успешно оформлен. Для всех деталей свяжитесь с нами по номеру +7 000 0000 0000'
+                    )
             except Adoption.DoesNotExist:
                 messages.error(request, 'Заявка не найдена')
         
