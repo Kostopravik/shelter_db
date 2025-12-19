@@ -89,26 +89,33 @@
         position: relative;
         border-radius: 8px;
         overflow: hidden;
+        border: 1px solid #e0e0e0;
+        background: #fafafa;
     }
     
     .photo-item img {
         width: 100%;
         height: 150px;
         object-fit: cover;
+        display: block;
     }
     
-    .photo-delete {
+    .photo-delete-label {
         position: absolute;
         top: 5px;
         right: 5px;
-        background: rgba(255, 0, 0, 0.8);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        cursor: pointer;
-        font-size: 1.2rem;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .photo-delete-label input[type="checkbox"] {
+        margin: 0;
     }
 </style>
 {% endblock %}
@@ -175,6 +182,10 @@
                     {% for photo in photos %}
                         <div class="photo-item">
                             <img src="{{ photo.photo_url.url }}" alt="Фото {{ animal.name }}">
+                            <label class="photo-delete-label">
+                                <input type="checkbox" name="delete_photos" value="{{ photo.id }}">
+                                Удалить
+                            </label>
                         </div>
                     {% endfor %}
                 </div>

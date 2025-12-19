@@ -343,6 +343,7 @@ def edit_animal(request, slug):
         animal.description = request.POST.get('description', '')
         animal.status = request.POST.get('status', 'in_shelter')
         new_photos = request.FILES.getlist('photos')
+        delete_photo_ids = request.POST.getlist('delete_photos')
         
         if not animal.name or not animal.species or not animal.health_status:
             messages.error(request, 'Заполните все обязательные поля')
@@ -351,7 +352,11 @@ def edit_animal(request, slug):
             animal.description = animal.description if animal.description else None
             animal.save()
             
-            # Загружаем новые фотографии
+            # Удаляем отмеченные фотографии
+            if delete_photo_ids:
+                AnimalPhoto.objects.filter(id__in=delete_photo_ids, animal=animal).delete()
+            
+            # Загружаем новые фотографии (можно добавить сразу несколько)
             for photo in new_photos:
                 AnimalPhoto.objects.create(animal=animal, photo_url=photo)
             

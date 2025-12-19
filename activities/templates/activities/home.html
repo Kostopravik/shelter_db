@@ -297,10 +297,17 @@
                         {% endif %}
                         <div class="animal-card-age">
                             {% if animal.age_years > 0 %}
-                                {{ animal.age_years }} г.
+                                {{ animal.age_years }}
+                                {% if animal.age_years == 1 or animal.age_years == 21 or animal.age_years == 31 or animal.age_years == 41 or animal.age_years == 51 or animal.age_years == 61 or animal.age_years == 71 or animal.age_years == 81 or animal.age_years == 91 %}год
+                                {% elif animal.age_years >= 2 and animal.age_years <= 4 or animal.age_years >= 22 and animal.age_years <= 24 or animal.age_years >= 32 and animal.age_years <= 34 or animal.age_years >= 42 and animal.age_years <= 44 or animal.age_years >= 52 and animal.age_years <= 54 or animal.age_years >= 62 and animal.age_years <= 64 or animal.age_years >= 72 and animal.age_years <= 74 or animal.age_years >= 82 and animal.age_years <= 84 or animal.age_years >= 92 and animal.age_years <= 94 %}года
+                                {% else %}лет{% endif %}
                             {% endif %}
+                            {% if animal.age_years > 0 and animal.age_months > 0 %}, {% endif %}
                             {% if animal.age_months > 0 %}
-                                {{ animal.age_months }} мес.
+                                {{ animal.age_months }}
+                                {% if animal.age_months == 1 or animal.age_months == 21 or animal.age_months == 31 %}месяц
+                                {% elif animal.age_months >= 2 and animal.age_months <= 4 or animal.age_months >= 22 and animal.age_months <= 24 or animal.age_months >= 32 and animal.age_months <= 34 %}месяца
+                                {% else %}месяцев{% endif %}
                             {% endif %}
                         </div>
                         <div style="margin-top: 0.5rem;">
